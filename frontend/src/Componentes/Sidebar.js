@@ -15,6 +15,7 @@ const Sidebar = ({ view, setView, isOpen, toggleSidebar, onLogout }) => {
 
       <div className="divider" />
 
+      {/* --- Secciones de navegación superiores --- */}
       <div
         className={view === "camera" ? "menu-item-active" : "menu-item"}
         onClick={() => setView("camera")}
@@ -36,13 +37,24 @@ const Sidebar = ({ view, setView, isOpen, toggleSidebar, onLogout }) => {
         📁 Historial <span>❯</span>
       </div>
 
-      {/* Lo añadimos con la misma clase que usas en los demás para que no se rompa nada */}
-      <div
-        className="menu-item"
-        onClick={onLogout}
-        style={{ marginTop: 'auto', color: '#e74c3c' }} 
-      >
-        🚪 Cerrar Sesión <span>❯</span>
+      {/* --- Secciones inferiores (Perfil y Salir) --- */}
+      <div className="bottom-menu" style={{ marginTop: 'auto' }}>
+        {/* Perfil justo encima de cerrar sesión */}
+        <div
+          className={view === "profile" ? "menu-item-active" : "menu-item"}
+          onClick={() => setView("profile")}
+        >
+          👤 Mi Perfil <span>❯</span>
+        </div>
+
+        {/* Botón de Cerrar Sesión al final de todo */}
+        <div
+          className="menu-item"
+          onClick={onLogout}
+          style={{ color: '#e74c3c' }} 
+        >
+          🚪 Cerrar Sesión <span>❯</span>
+        </div>
       </div>
     </div>
   );

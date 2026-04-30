@@ -17,7 +17,7 @@ const Login = ({ onLoginSuccess }) => {
     const handleSubmit = (e) => {
         e.preventDefault();
         
-        // Validación de dominios reales
+        // Validación de formato de correo y dominios comunes
         const emailRegex = /^[a-zA-Z0-9._%+-]+@(gmail|hotmail|outlook|yahoo|icloud|live)\.(com|es|net)$/;
 
         if (!emailRegex.test(formData.email.toLowerCase())) {
@@ -29,10 +29,11 @@ const Login = ({ onLoginSuccess }) => {
             return;
         }
 
-        // --- USANDO sessionStorage (se borra al recargar) ---
+        // Recuperamos la lista de usuarios de la sesión actual
         const usuariosRegistrados = JSON.parse(sessionStorage.getItem('usuarios_far')) || [];
 
         if (isRegister) {
+            // Lógica de Registro[cite: 5]
             const usuarioExiste = usuariosRegistrados.find(u => u.email === formData.email);
             
             if (usuarioExiste) {
@@ -45,6 +46,7 @@ const Login = ({ onLoginSuccess }) => {
             
             setSuccessMsg("¡Cuenta creada con éxito! Ya puedes ingresar.");
             
+            // Limpieza y cambio automático a la pestaña de Login[cite: 5]
             setTimeout(() => {
                 setIsRegister(false);
                 setSuccessMsg("");
@@ -53,11 +55,18 @@ const Login = ({ onLoginSuccess }) => {
             }, 2500);
 
         } else {
+            // Lógica de Inicio de Sesión[cite: 5]
             const usuarioValido = usuariosRegistrados.find(
                 u => u.email === formData.email && u.password === formData.password
             );
 
             if (usuarioValido) {
+                // GUARDADO DE SESIÓN ACTUAL: Vital para que el Perfil funcione[cite: 5, 6]
+                sessionStorage.setItem('usuario_actual', JSON.stringify({
+                    user: usuarioValido.user,
+                    email: usuarioValido.email
+                }));
+                
                 onLoginSuccess();
             } else {
                 setError("Correo o contraseña incorrectos.");
@@ -132,7 +141,7 @@ const Login = ({ onLoginSuccess }) => {
                     </div>
 
                     <button type="submit" className="btn-submit">
-                        {isRegister ? "CREAR CUENTA" : "INGRESAR"}
+                        {isRegister ? "CREAR CUENTA" : "INICIAR SESIÓN"}
                     </button>
                 </form>
             </div>
