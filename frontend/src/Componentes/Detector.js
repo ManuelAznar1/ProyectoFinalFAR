@@ -6,7 +6,7 @@ import CargarImagen from './CargarImagen';
 import Historial from './Historial';
 import '../estilos/detectorEstilos.css';
 
-const Detector = () => {
+const Detector = ({onLogout}) => {
     const webcamRef = useRef(null);
     const [mensaje, setMensaje] = useState("Sistema listo.");
     const [view, setView] = useState('camera'); 
@@ -54,7 +54,7 @@ const Detector = () => {
 
             {!sidebarOpen && <button onClick={() => setSidebarOpen(true)} className="btn-open">☰</button>}
 
-            <Sidebar view={view} setView={setView} isOpen={sidebarOpen} toggleSidebar={() => setSidebarOpen(false)} />
+            <Sidebar view={view} setView={setView} isOpen={sidebarOpen} toggleSidebar={() => setSidebarOpen(false)} onLogout={onLogout}/>
 
             <div className="main-content">
                 <div className="content-wrapper">

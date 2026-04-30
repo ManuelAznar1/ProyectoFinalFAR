@@ -1,7 +1,7 @@
 import React from "react";
 import "../estilos/sidebar.css";
 
-const Sidebar = ({ view, setView, isOpen, toggleSidebar }) => {
+const Sidebar = ({ view, setView, isOpen, toggleSidebar, onLogout }) => {
   if (!isOpen) return null;
 
   return (
@@ -34,6 +34,15 @@ const Sidebar = ({ view, setView, isOpen, toggleSidebar }) => {
         onClick={() => setView("history")}
       >
         📁 Historial <span>❯</span>
+      </div>
+
+      {/* Lo añadimos con la misma clase que usas en los demás para que no se rompa nada */}
+      <div
+        className="menu-item"
+        onClick={onLogout}
+        style={{ marginTop: 'auto', color: '#e74c3c' }} 
+      >
+        🚪 Cerrar Sesión <span>❯</span>
       </div>
     </div>
   );
