@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import '../estilos/loginEstilos.css';
 
 const Login = ({ onLoginSuccess }) => {
@@ -14,10 +15,9 @@ const Login = ({ onLoginSuccess }) => {
         if (successMsg) setSuccessMsg("");
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         
-        // Validación de formato de correo y dominios comunes
         const emailRegex = /^[a-zA-Z0-9._%+-]+@(gmail|hotmail|outlook|yahoo|icloud|live)\.(com|es|net)$/;
 
         if (!emailRegex.test(formData.email.toLowerCase())) {
@@ -29,48 +29,40 @@ const Login = ({ onLoginSuccess }) => {
             return;
         }
 
-        // Recuperamos la lista de usuarios de la sesión actual
-        const usuariosRegistrados = JSON.parse(sessionStorage.getItem('usuarios_far')) || [];
+        const urlBase = "http://127.0.0.1:8000/api";
 
-        if (isRegister) {
-            // Lógica de Registro[cite: 5]
-            const usuarioExiste = usuariosRegistrados.find(u => u.email === formData.email);
-            
-            if (usuarioExiste) {
-                setError("Este correo ya está registrado.");
-                return;
-            }
+        try {
+            if (isRegister) {
+                await axios.post(`${urlBase}/registrar`, {
+                    nombre: formData.user, 
+                    gmail: formData.email,
+                    password: formData.password
+                });
 
-            const nuevosUsuarios = [...usuariosRegistrados, formData];
-            sessionStorage.setItem('usuarios_far', JSON.stringify(nuevosUsuarios));
-            
-            setSuccessMsg("¡Cuenta creada con éxito! Ya puedes ingresar.");
-            
-            // Limpieza y cambio automático a la pestaña de Login[cite: 5]
-            setTimeout(() => {
-                setIsRegister(false);
-                setSuccessMsg("");
-                setFormData({ ...formData, password: '' });
-                setShowPassword(false);
-            }, 2500);
+                setSuccessMsg("¡Cuenta creada con éxito! Ya puedes ingresar.");
+                
+                setTimeout(() => {
+                    setIsRegister(false);
+                    setSuccessMsg("");
+                    setFormData({ ...formData, password: '' });
+                    setShowPassword(false);
+                }, 2500);
 
-        } else {
-            // Lógica de Inicio de Sesión[cite: 5]
-            const usuarioValido = usuariosRegistrados.find(
-                u => u.email === formData.email && u.password === formData.password
-            );
+            } else {
+                const res = await axios.post(`${urlBase}/login`, {
+                    gmail: formData.email,
+                    password: formData.password
+                });
 
-            if (usuarioValido) {
-                // GUARDADO DE SESIÓN ACTUAL: Vital para que el Perfil funcione[cite: 5, 6]
                 sessionStorage.setItem('usuario_actual', JSON.stringify({
-                    user: usuarioValido.user,
-                    email: usuarioValido.email
+                    user: res.data.user.nombre,
+                    email: res.data.user.gmail
                 }));
                 
                 onLoginSuccess();
-            } else {
-                setError("Correo o contraseña incorrectos.");
             }
+        } catch (err) {
+            setError(err.response?.data?.message || "Error de conexión con el servidor");
         }
     };
 
