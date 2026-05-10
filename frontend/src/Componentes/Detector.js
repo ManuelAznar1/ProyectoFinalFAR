@@ -9,50 +9,52 @@ import "../estilos/detectorEstilos.css";
 
 const Detector = ({ onLogout }) => {
   const webcamRef = useRef(null);
-  const [previewImage, setPreviewImage] = useState(null); // Añade esta línea si falta
+  const [camaraEncendida, setCamaraEncendida] = useState(false);
+  const [previewImage, setPreviewImage] = useState(null); 
+  const [archivoFisico, setArchivoFisico] = useState(null); 
   const [mensaje, setMensaje] = useState("Sistema listo.");
   const [view, setView] = useState("camera");
-  const [camaraEncendida, setCamaraEncendida] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [imageSelected, setImageSelected] = useState(null);
 
-  // Historial volátil: se recupera de sessionStorage
   const [historial, setHistorial] = useState(() => {
     const saved = sessionStorage.getItem("historial_imagenes");
     return saved ? JSON.parse(saved) : [];
   });
 
-  const enviarAlBackend = async (base64) => {
-    if (!base64) return;
-    setMensaje("Analizando...");
-    try {
-      const res = await axios.post("http://localhost:8000/reconocer", {
-        img_base64: base64,
-      });
-      const nuevoResultado = res.data.mensaje;
+  const enviarAlBackend = async (archivoManual = null) => { 
+      const archivoParaSubir = archivoManual || archivoFisico;
 
-      const nuevoAnalisis = {
-        img: base64,
-        resultado: nuevoResultado,
-        fecha: new Date().toLocaleString(),
-      };
+      if (!archivoParaSubir) {
+        setMensaje("No hay imagen que enviar.");
+        return;
+      }
 
-      const nuevoHistorial = [nuevoAnalisis, ...historial].slice(0, 20);
-      setHistorial(nuevoHistorial);
-      // Guardado volátil en la sesión
-      sessionStorage.setItem(
-        "historial_imagenes",
-        JSON.stringify(nuevoHistorial),
-      );
-      setMensaje(nuevoResultado);
-    } catch (err) {
-      setMensaje("Error de conexión");
-    }
+      setMensaje("Enviando captura al servidor FAR...");
+
+      try {
+        const formData = new FormData();
+        formData.append("foto", archivoParaSubir); 
+
+        const res = await axios.post("http://localhost:8000/api/capturas", formData);
+
+        const nuevaCaptura = {
+          img: res.data.url, 
+          resultado: res.data.message,
+          fecha: new Date().toLocaleString(),
+        };
+
+        setHistorial([nuevaCaptura, ...historial]);
+        setMensaje("¡Guardado en base de datos!");
+        
+      } catch (err) {
+        console.error(err);
+        setMensaje("Error de conexión con Laravel");
+      }
   };
 
   return (
     <div className="detector-container">
-      {/* Modal para ver imágenes del historial en grande */}
       {imageSelected && (
         <div className="modal-overlay" onClick={() => setImageSelected(null)}>
           <div className="modal-content">
@@ -62,14 +64,10 @@ const Detector = ({ onLogout }) => {
         </div>
       )}
 
-      {/* Botón para abrir la sidebar si está cerrada */}
       {!sidebarOpen && (
-        <button onClick={() => setSidebarOpen(true)} className="btn-open">
-          ☰
-        </button>
+        <button onClick={() => setSidebarOpen(true)} className="btn-open">☰</button>
       )}
 
-      {/* Sidebar con navegación y función de cierre de sesión */}
       <Sidebar
         view={view}
         setView={setView}
@@ -80,20 +78,22 @@ const Detector = ({ onLogout }) => {
 
       <div className="main-content">
         <div className="content-wrapper">
-          {/* Renderizado condicional de vistas */}
           {view === "camera" && (
             <VideoDirecto
               camaraEncendida={camaraEncendida}
               setCamaraEncendida={setCamaraEncendida}
               webcamRef={webcamRef}
               enviarAlBackend={enviarAlBackend}
+              setArchivoFisico={setArchivoFisico} 
+              setPreviewImage={setPreviewImage}
             />
           )}
 
           {view === "upload" && (
             <CargarImagen
-              previewImage={previewImage} /* Falta esta prop */
+              previewImage={previewImage}
               setPreviewImage={setPreviewImage}
+              setArchivoFisico={setArchivoFisico} 
               setMensaje={setMensaje}
               enviarAlBackend={enviarAlBackend}
             />
@@ -108,7 +108,6 @@ const Detector = ({ onLogout }) => {
 
           {view === "profile" && <Perfil />}
 
-          {/* Mensaje de estado inferior */}
           {view !== "history" && view !== "profile" && (
             <div className="message-container">
               <p className="status-text">{mensaje}</p>

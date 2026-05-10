@@ -1,15 +1,17 @@
 import React, { useRef } from 'react';
 
-const CargarImagen = ({ previewImage, setPreviewImage, setMensaje, enviarAlBackend }) => {
+const CargarImagen = ({ previewImage, setPreviewImage, setMensaje, enviarAlBackend, setArchivoFisico }) => {
     const fileInputRef = useRef(null);
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (file) {
+            setArchivoFisico(file); 
+
             const reader = new FileReader();
             reader.onloadend = () => {
-                setPreviewImage(reader.result);
-                setMensaje("Imagen cargada con éxito.");
+                setPreviewImage(reader.result); 
+                setMensaje("Imagen cargada. Lista para el servidor.");
             };
             reader.readAsDataURL(file);
         }
@@ -18,7 +20,7 @@ const CargarImagen = ({ previewImage, setPreviewImage, setMensaje, enviarAlBacke
     return (
         <div className="view-section">
             <header className="detector-header">
-                <h2 className="detector-title">STATIC IMAGE ANALYSIS</h2>
+                <h2 className="detector-title">ANÁLISIS DE IMAGEN ESTÁTICA</h2>
             </header>
 
             <div className="drop-zone">
@@ -26,7 +28,7 @@ const CargarImagen = ({ previewImage, setPreviewImage, setMensaje, enviarAlBacke
                     <img src={previewImage} alt="Preview" className="img-fit" />
                 ) : (
                     <div className="placeholder-text">
-                        <p>No hay imagen seleccionada</p>
+                        <p>Arrastra una foto o usa el botón</p>
                     </div>
                 )}
             </div>
@@ -37,22 +39,23 @@ const CargarImagen = ({ previewImage, setPreviewImage, setMensaje, enviarAlBacke
                     ref={fileInputRef} 
                     style={{display: 'none'}} 
                     onChange={handleFileChange} 
-                    accept="image/*" 
+                    accept="image/png, image/jpeg" 
                 />
+                
                 <button className="btn-secondary" onClick={() => fileInputRef.current.click()}>
-                    Buscar Archivo
+                    Seleccionar Archivo
                 </button>
                 
-                <button 
-                    className="btn-primary" 
-                    onClick={() => enviarAlBackend(previewImage)}
-                    disabled={!previewImage}
-                >
-                    Analizar Imagen
+                <button className="btn-primary" onClick={() => enviarAlBackend()}disabled={!previewImage}>
+                    Subir al Servidor FAR
                 </button>
 
                 {previewImage && (
-                    <button className="btn-secondary" onClick={() => {setPreviewImage(null); setMensaje("Sistema listo.");}}>
+                    <button className="btn-secondary" onClick={() => {
+                        setPreviewImage(null); 
+                        setArchivoFisico(null);
+                        setMensaje("Sistema listo.");
+                    }}>
                         Quitar
                     </button>
                 )}

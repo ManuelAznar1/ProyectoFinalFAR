@@ -1,19 +1,29 @@
 import React from 'react';
 import Webcam from "react-webcam";
 
-const VideoDirecto = ({ camaraEncendida, setCamaraEncendida, webcamRef, enviarAlBackend }) => {
+const VideoDirecto = ({ camaraEncendida, setCamaraEncendida, webcamRef, enviarAlBackend, setArchivoFisico, setPreviewImage }) => {
     
-    const capturarYEnviar = () => {
+    const capturarYEnviar = async () => {
         if (webcamRef.current) {
-            const foto = webcamRef.current.getScreenshot();
-            enviarAlBackend(foto);
+            const fotoBase64 = webcamRef.current.getScreenshot();
+            
+            if (fotoBase64) {
+                const res = await fetch(fotoBase64);
+                const blob = await res.blob();
+                
+                const archivo = new File([blob], "captura_webcam.jpg", { type: "image/jpeg" });
+
+                setArchivoFisico(archivo);
+                setPreviewImage(fotoBase64); 
+                enviarAlBackend(archivo);
+            }
         }
     };
 
     return (
         <div className="view-section">
             <header className="detector-header">
-                <h2 className="detector-title">LIVE VIDEO ANALYSIS</h2>
+                <h2 className="detector-title">ANÁLISIS EN DIRECTO</h2>
                 <button 
                     onClick={() => setCamaraEncendida(!camaraEncendida)}
                     className="btn-toggle"
@@ -25,7 +35,12 @@ const VideoDirecto = ({ camaraEncendida, setCamaraEncendida, webcamRef, enviarAl
 
             <div className="drop-zone">
                 {camaraEncendida ? (
-                    <Webcam audio={false} ref={webcamRef} screenshotFormat="image/jpeg" className="img-fit" />
+                    <Webcam 
+                        audio={false} 
+                        ref={webcamRef} 
+                        screenshotFormat="image/jpeg" 
+                        className="img-fit" 
+                    />
                 ) : (
                     <div className="placeholder-text"><p>Cámara en espera...</p></div>
                 )}
@@ -37,7 +52,7 @@ const VideoDirecto = ({ camaraEncendida, setCamaraEncendida, webcamRef, enviarAl
                     onClick={capturarYEnviar} 
                     disabled={!camaraEncendida}
                 >
-                    Escanear ahora
+                    Capturar y Analizar
                 </button>
             </div>
         </div>
